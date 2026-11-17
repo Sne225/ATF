@@ -126,7 +126,7 @@ export default function FieldMap({ lat, lng, locationLabel, fieldChosen, onLocat
     try {
       instance = new mapboxgl.Map({
         container: host.current, accessToken: token, style: styles.satellite,
-        center: [initial.current.lng, initial.current.lat], zoom: initial.current.fieldChosen ? 8 : 3,
+        center: [initial.current.lng, initial.current.lat], zoom: initial.current.fieldChosen ? 9 : 4,
         projection: 'mercator',
       })
     } catch (error) {

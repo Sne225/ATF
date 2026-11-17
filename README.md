@@ -6,11 +6,17 @@ the result, reasons, an interactive forecast, field-condition estimates, a
 20-year seasonal history, and a shareable message. It is decision support, not
 a guarantee of a successful harvest.
 
-## Run locally
+## Getting started
 
-Requires Node.js 20.19+ or 22.12+.
+Run instructions, API reference, architecture, data sources, and maintenance
+notes live in [`AGENTS.md`](./AGENTS.md). In short:
 
 ```sh
+# backend (FastAPI)
+pip install -r server/requirements.txt
+uvicorn server.main:app --reload --port 8000
+
+# frontend (Vite)
 npm install
 npm run dev
 ```
@@ -46,8 +52,11 @@ tap the map to set the field.
 
 ## Deployment and Mapbox
 
-The app deploys as a static Vite site. No deployment provider or GitHub Actions
-workflow is configured in this repository.
+The Vite frontend builds to static files in `dist`. The default API mode now
+requires the FastAPI backend described in `AGENTS.md`; deploy it alongside the
+frontend with `/api` routed to it, or build with `VITE_API_MODE=live` for direct
+browser requests to the public weather providers. No GitHub Actions workflow is
+configured in this repository.
 
 1. Create a public access token (`pk.*`) in your
    [Mapbox account](https://account.mapbox.com/access-tokens/). Keep the public
@@ -83,46 +92,6 @@ restrictions or substitute a secret token to work around an error. Public
 tokens are visible in the browser by design, and Mapbox usage is billed to the
 token's account.
 
-## How the advice works
-
-The rule engine uses the field-local forecast dates from Open-Meteo (today is
-daily-array index 14 with `past_days=14`). It checks whether the three-day rain
-sum meets the crop's onset threshold, whether the longest following dry spell
-is within that crop's tolerance, and whether the modelled mean soil temperature
-meets its minimum. It checks cold soil first, then a plantable today, a false
-start, a plantable day in the next eight days, and otherwise recommends
-checking again in three days. Confidence is lowered when forecast evidence is
-uncertain or the estimated topsoil is dry despite sowing rain.
-
-The catalogue has 31 crops. Crop warmth and drought classes in
-`src/lib/advisor/crops.ts` provide illustrative soil-temperature, heat, onset
-rain, and dry-spell guides. These defaults need review by an agronomist familiar
-with local varieties, soils, and planting practices.
-
-Warmth guides (minimum soil temperature / heat guide) are cool 7°C / 30°C,
-mild 12°C / 35°C, warm 15°C / 38°C, and hot 18°C / 40°C. Drought guides
-(three-day onset rain / maximum dry spell) are delicate 25 mm / 4 days,
-sensitive 25 mm / 7 days, moderate 20 mm / 10 days, and hardy 20 mm / 12 days.
-
-The outlook lets the user inspect each of the 16 forecast days and compare
-rainfall, temperature, modelled topsoil moisture, and rain minus reference
-evapotranspiration over 7- or 16-day ranges. Missing readings remain unknown,
-not zero. Field-condition cards explain the estimates and distinguish good,
-watch, risk, and unavailable data.
-
-The historical panel requests 20 complete July-to-June seasons of daily
-precipitation from Open-Meteo's ERA5 archive. It compares monthly rainfall and
-the first crop-rule planting window in each season. A planting window requires
-the crop's three-day onset-rain guide and a following dry spell within its
-tolerance; earlier false starts are also counted. Historical patterns describe
-the past and are not a forecast or a field measurement.
-
-If watering is available, the advisor does not require sowing rain or a short
-dry spell, but still checks cold soil and highlights heat and very heavy rain.
-This is a user-selected assumption, not a prediction that irrigation water is
-available in practice. The rules are deterministic; no language model is
-called at runtime.
-
 ## Data and privacy
 
 - Forecast: Open-Meteo Forecast API, with daily precipitation, precipitation
@@ -139,7 +108,8 @@ called at runtime.
   request per second.
 - Forecast responses are cached in this browser's local storage for one hour.
   Stale data for the same rounded field coordinates may be shown after a
-  network failure. No user account or server is involved.
+  network failure. No user account is required; server API mode forwards data
+  requests through the FastAPI backend.
 
 The service sends coordinates to the selected public data providers. Weather
 models are estimates at a regional grid scale; soil readings may be absent.
