@@ -1,0 +1,377 @@
+@import "tailwindcss";
+
+:root {
+  font-family: "Inter", sans-serif;
+  color: #1f1a14;
+  background: #f6f1e7;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  --sand: #f6f1e7;
+  --card: #fffdf8;
+  --ink: #1f1a14;
+  --muted: #71695d;
+  --green: #1f7a4d;
+  --amber: #a76e00;
+  --red: #b93828;
+  --blue: #2b6cb0;
+  --line: #e8e0d1;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: var(--sand); }
+button, input { font: inherit; }
+button { cursor: pointer; }
+.app-shell { min-height: 100vh; }
+.topbar { height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 34px; background: var(--card); border-bottom: 1px solid #eee7dc; position: relative; z-index: 20; }
+.brand { display: flex; gap: 10px; align-items: center; color: var(--ink); text-decoration: none; font: 700 22px/1 "Bricolage Grotesque", sans-serif; letter-spacing: -.8px; }
+.brand-mark { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 12px 12px 12px 4px; background: var(--green); color: white; font-size: 24px; }
+.brand small { display: block; margin-top: 4px; color: #827a6f; font: 500 10px/1 "Inter", sans-serif; letter-spacing: .3px; }
+.header-note { color: #777064; font-size: 12px; }
+.weather-sun { color: #c49319; margin-right: 7px; font-size: 18px; vertical-align: -1px; }
+.locate-top { min-height: 48px; padding: 0 15px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink); background: white; font-size: 12px; font-weight: 600; }
+.locate-top span { color: var(--blue); font-size: 17px; vertical-align: -1px; margin-right: 4px; }
+.workspace { display: grid; grid-template-columns: minmax(0, 58fr) minmax(430px, 42fr); height: calc(100dvh - 72px); min-height: 620px; overflow: hidden; }
+.map-panel { position: sticky; top: 72px; height: calc(100dvh - 72px); min-height: 0; overflow: hidden; background: #e5e9dd; }
+.map-canvas { position: absolute; inset: 0; z-index: 0; background: #e7eadf; }
+.map-wash { pointer-events: none; position: absolute; inset: 0; z-index: 400; background: linear-gradient(180deg,rgba(246,241,231,.58),transparent 25%,transparent 73%,rgba(246,241,231,.13)); }
+.map-panel .leaflet-control-attribution { display: none; }
+.map-panel .leaflet-control-zoom { border: 0; box-shadow: 0 3px 14px #352a1e22; margin-bottom: 90px; margin-right: 16px; }
+.map-panel .leaflet-control-zoom a { width: 48px; height: 48px; line-height: 46px; font-size: 22px; color: #453e33; border: 0; }
+.map-title { position: absolute; z-index: 500; top: 28px; left: 30px; padding: 10px 14px; border: 1px solid #e8e0d1; border-radius: 14px; background: #fffdf8ed; box-shadow: 0 4px 14px #352a1e18; }
+.section-kicker { color: #817766; font-size: 9px; font-weight: 700; letter-spacing: 1.4px; }
+.map-title h2 { margin: 3px 0 0; font: 600 26px/1.1 "Bricolage Grotesque", sans-serif; }
+.map-title.unchosen h2 { font-size: 17px; }
+.map-search { position: absolute; z-index: 600; top: 26px; right: 24px; width: min(320px, 45%); }
+.searchbox { height: 48px; display: flex; align-items: center; padding: 0 0 0 12px; background: #fffdf8; border: 1px solid #e8e0d1; border-radius: 14px; box-shadow: 0 6px 22px #40311c18; }
+.searchbox > span { color: #6f685c; font-size: 22px; transform: rotate(-20deg); margin-right: 8px; }
+.searchbox input { width: 100%; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 12px; }
+.searchbox button { flex: none; width: 48px; height: 48px; border: 0; background: none; color: #8d8579; font-size: 20px; padding: 0; }
+.search-results { position: absolute; top: 54px; width: 100%; max-height: 220px; overflow: auto; border-radius: 12px; background: var(--card); box-shadow: 0 8px 26px #40311c24; padding: 5px; }
+.search-results p { margin: 0; padding: 12px; color: var(--muted); font-size: 12px; }
+.search-results button { display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 48px; padding: 8px 10px; background: transparent; border: 0; border-radius: 8px; color: var(--ink); text-align: left; font-size: 12px; }
+.search-results button:hover { background: #f3efe6; }
+.search-results button span { color: var(--green); font-size: 18px; }
+.location-error { margin: 6px 0 0; padding: 9px 10px; border-radius: 9px; color: #78261d; background: #fff1ec; font-size: 11px; }
+.map-prompt { position: absolute; z-index: 500; left: 27px; bottom: 31px; display: flex; align-items: center; gap: 13px; max-width: 310px; padding: 13px 15px; background: #fffdf8ed; border: 1px solid #e9e1d4; border-radius: 15px; box-shadow: 0 5px 20px #34281717; }
+.map-prompt.unselected { bottom: 130px; }
+.prompt-pin { width: 39px; height: 45px; flex: none; }
+.field-pin { width: 100%; height: 100%; color: var(--green); }
+.map-prompt strong { font: 600 15px/1.2 "Bricolage Grotesque", sans-serif; }
+.map-prompt p { margin: 4px 0 0; color: #6e675c; font-size: 10px; line-height: 1.5; }
+.map-locate { position: absolute; z-index: 500; right: 16px; bottom: 26px; height: 48px; padding: 0 14px; border: 0; border-radius: 12px; background: var(--card); box-shadow: 0 3px 14px #352a1e20; color: #26241f; font-size: 11px; font-weight: 600; }
+.map-locate span { color: var(--blue); font-size: 17px; margin-right: 3px; }
+.quick-picks { position: absolute; z-index: 500; left: 14px; right: 14px; bottom: 70px; display: flex; gap: 7px; overflow-x: auto; padding: 2px 2px 5px; scrollbar-width: none; }
+.quick-picks::-webkit-scrollbar { display: none; }
+.quick-picks button { flex: 0 0 auto; min-height: 48px; padding: 0 13px; border: 1px solid #e3dccf; border-radius: 12px; background: #fffdf8; color: #39352e; font-size: 11px; font-weight: 600; box-shadow: 0 3px 12px #352a1e18; }
+.quick-picks button:hover { border-color: #9ab99c; background: #edf4ea; }
+.map-attribution { position: absolute; z-index: 501; right: 7px; bottom: 3px; padding: 2px 4px; color: #36372d; border-radius: 3px; background: #fffdf8cc; font-size: 8px; }
+.field-marker-wrap { background: transparent; border: 0; }
+.gps-marker-wrap { background: transparent; border: 0; }
+.gps-dot { display: block; width: 18px; height: 18px; border: 3px solid white; border-radius: 50%; background: #2b6cb0; box-shadow: 0 0 0 5px #2b6cb044,0 1px 5px #152b4270; animation: gps-pulse 1.8s ease-out infinite; }
+@keyframes gps-pulse { 50% { box-shadow: 0 0 0 9px #2b6cb01c,0 1px 5px #152b4270; } }
+.pin-drop { width: 42px; height: 54px; filter: drop-shadow(0 3px 3px #1f1a1445); animation: drop-in .33s ease-out both; }
+.pin-drop svg { width: 100%; height: 100%; }
+@keyframes drop-in { from { transform: translateY(-13px); } to { transform: translateY(0); } }
+.advice-panel { min-width: 0; overflow: auto; background: var(--sand); scrollbar-width: thin; scrollbar-color: #d3cbbb transparent; }
+.advice-inner { width: min(100%, 620px); margin: 0 auto; padding: 21px 24px 18px; }
+.crop-section { margin: 1px 0 14px; }
+.section-heading { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 9px; }
+.section-heading h2 { margin: 0; color: #26231e; font: 600 15px/1.2 "Bricolage Grotesque",sans-serif; }
+.crop-question { color: #655e53; font-size: 12px; font-weight: 500; }
+.crop-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+.crop-chip { display: flex; justify-content: flex-start; align-items: center; gap: 7px; min-height: 48px; padding: 0 9px; background: #fbf8f1; border: 1px solid #e5ddcf; border-radius: 11px; color: #4a443b; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.crop-chip > span { font-size: 15px; }
+.crop-chip.selected { background: #e8f0e7; border-color: #9ab99c; color: #1c603e; box-shadow: inset 0 0 0 1px #b5cbb1; }
+.crop-icon { flex: none; font-size: 15px; line-height: 1; }
+.more-crops { border-style: dashed; background: #f0ede4; color: #544e43; }
+.more-crops > span:last-child { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.more-crops small { color: #777064; font-size: 9px; font-weight: 400; }
+.more-icon { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px; color: #5e6f4f; background: #e2e8d8; font-size: 18px; }
+.irrigation-toggle { display: flex; align-items: center; gap: 9px; min-height: 48px; margin-top: 6px; color: #433e35; font-size: 11px; font-weight: 500; cursor: pointer; }
+.irrigation-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.switch-track { display: flex; align-items: center; width: 42px; height: 24px; padding: 3px; border-radius: 15px; background: #d3ccbd; transition: background .2s; }
+.switch-track > span { width: 18px; height: 18px; border-radius: 50%; background: white; box-shadow: 0 1px 3px #0003; transition: transform .2s; }
+.irrigation-toggle input:checked + .switch-track { background: var(--green); }
+.irrigation-toggle input:checked + .switch-track > span { transform: translateX(18px); }
+.irrigation-toggle input:focus-visible + .switch-track { outline: 3px solid #256c9f; outline-offset: 3px; }
+.rain-fed-note { margin: -1px 0 7px; color: #6d6559; font-size: 10px; line-height: 1.4; }
+.crop-dialog { width: min(620px, calc(100vw - 32px)); max-width: none; max-height: min(760px, 85dvh); padding: 0; border: 1px solid #e8e0d1; border-radius: 20px; color: var(--ink); background: var(--card); box-shadow: 0 14px 60px #20180d55; }
+.crop-dialog::backdrop { background: #1d211dcc; backdrop-filter: blur(2px); }
+.crop-dialog-inner { display: flex; flex-direction: column; max-height: min(760px, 85dvh); padding: 20px; }
+.crop-dialog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 13px; }
+.crop-dialog-header h2 { margin: 3px 0 0; font: 600 24px/1.1 "Bricolage Grotesque",sans-serif; }
+.dialog-close { width: 48px; height: 48px; border: 0; border-radius: 12px; background: #f1ede4; color: #514a3e; font-size: 26px; }
+.crop-search { display: flex; align-items: center; gap: 9px; min-height: 50px; padding: 0 13px; border: 1px solid #ddd5c7; border-radius: 12px; background: #fff; }
+.crop-search > span { color: #6f685c; font-size: 22px; }
+.crop-search input { width: 100%; min-width: 0; height: 48px; border: 0; outline: 0; background: transparent; font-size: 14px; }
+.crop-categories { display: flex; gap: 6px; overflow-x: auto; margin: 12px 0; padding: 2px 1px 5px; scrollbar-width: thin; }
+.crop-categories button { flex: 0 0 auto; min-height: 48px; padding: 0 12px; border: 1px solid #e2dbcf; border-radius: 22px; background: #f5f1e8; color: #504a3f; font-size: 11px; font-weight: 500; }
+.crop-categories button.active { border-color: #729773; background: #e9f1e7; color: #1f603e; }
+.crop-results { min-height: 0; overflow-y: auto; border-top: 1px solid #eee8dd; }
+.crop-result { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 58px; padding: 8px 10px; border: 0; border-bottom: 1px solid #eee8dd; background: transparent; color: #302c25; text-align: left; }
+.crop-result:hover,.crop-result.active,.crop-result[aria-selected="true"] { background: #f0f3e9; }
+.crop-result .crop-icon { width: 27px; text-align: center; font-size: 20px; }
+.crop-result-name { flex: 1; font-size: 13px; font-weight: 600; }
+.crop-result-tag { color: #686153; font-size: 10px; }
+.crop-empty { margin: 0; padding: 24px 12px; color: #60594e; text-align: center; font-size: 13px; }
+.card { background: var(--card); border: 1px solid #ebe4d9; border-radius: 16px; box-shadow: 0 2px 7px #34281708; }
+.verdict-card { position: relative; overflow: hidden; padding: 16px 19px 15px; border: 1px solid #d5e1d3; border-radius: 17px; background: #edf4ea; animation: rise-in .32s ease-out both; }
+@keyframes rise-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.verdict-card:before { content: ""; position: absolute; width: 175px; height: 175px; border-radius: 50%; right: -74px; top: -110px; background: #1f7a4d0b; }
+.verdict-top { position: absolute; display: flex; align-items: center; gap: 8px; right: 16px; top: 15px; }
+.verdict-symbol { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: #d7e8d4; color: var(--green); font-size: 17px; font-weight: 700; }
+.confidence { display: inline-flex; gap: 5px; align-items: center; color: #536151; font-size: 10px; font-weight: 600; text-transform: lowercase; }
+.confidence-dot { width: 6px; height: 6px; border-radius: 100%; background: var(--green); }
+.confidence { padding: 5px 7px; border: 0; border-radius: 8px; background: #fffdf8d9; cursor: pointer; }
+.confidence-help { position: absolute; z-index: 4; top: 51px; right: 15px; width: min(250px, 75%); padding: 10px 12px; border: 1px solid #e3dbc9; border-radius: 10px; background: #fffdf8; box-shadow: 0 5px 16px #352a1e22; color: #39352e; font-size: 11px; line-height: 1.45; }
+.confidence-medium .confidence-dot { background: #b77700; }
+.confidence-low .confidence-dot { background: #ad5140; }
+.verdict-eyebrow { color: #517153; font-size: 9px; letter-spacing: 1.25px; font-weight: 700; }
+.verdict-card h1 { max-width: 90%; margin: 5px 0 3px; color: #174b31; font: 700 clamp(28px, 2.4vw, 37px)/1.07 "Bricolage Grotesque", sans-serif; letter-spacing: -1px; }
+.verdict-card > p { margin: 0; max-width: 92%; color: #425444; font-size: 12px; line-height: 1.5; }
+.verdict-meta { display: flex; justify-content: space-between; gap: 8px; padding-top: 10px; margin-top: 10px; border-top: 1px solid #d9e3d4; color: #5e6b5b; font-size: 10px; }
+.verdict-false_start { background: #fff0ec; border-color: #efd2ca; }
+.verdict-false_start .verdict-symbol { color: var(--red); background: #f9dcd4; }
+.verdict-false_start .verdict-eyebrow,.verdict-false_start h1 { color: #922f24; }
+.verdict-false_start > p,.verdict-false_start .verdict-meta { color: #724c42; }
+.verdict-false_start .verdict-meta { border-color: #edd7d0; }
+.verdict-wait_window,.verdict-wait_no_rain,.verdict-too_cold { background: #fbf2da; border-color: #ead9ab; }
+.verdict-wait_window .verdict-symbol,.verdict-wait_no_rain .verdict-symbol,.verdict-too_cold .verdict-symbol { color: #916100; background: #f4e3b4; }
+.verdict-wait_window .verdict-eyebrow,.verdict-wait_window h1,.verdict-wait_no_rain .verdict-eyebrow,.verdict-wait_no_rain h1,.verdict-too_cold .verdict-eyebrow,.verdict-too_cold h1 { color: #6d4d0d; }
+.verdict-wait_window > p,.verdict-wait_no_rain > p,.verdict-too_cold > p,.verdict-wait_window .verdict-meta,.verdict-wait_no_rain .verdict-meta,.verdict-too_cold .verdict-meta { color: #665936; }
+.verdict-wait_window .verdict-meta,.verdict-wait_no_rain .verdict-meta,.verdict-too_cold .verdict-meta { border-color: #eadfbe; }
+.reason-card,.rain-card,.soil-card,.share-card { padding: 14px 16px; margin-top: 10px; }
+.card-title { display: flex; align-items: center; min-height: 25px; gap: 8px; }
+.card-title h2,.share-heading h2 { margin: 0; color: #26231e; font: 600 14px/1.2 "Bricolage Grotesque", sans-serif; }
+.card-icon { width: 25px; height: 25px; display: grid; place-items: center; background: #f3eee1; border-radius: 8px; color: #776329; font-size: 13px; }
+.reason-card ul { list-style: none; margin: 7px 0 0; padding: 0; }
+.reason-card li { display: flex; align-items: flex-start; gap: 8px; margin: 5px 0; color: #524d44; font-size: 11px; line-height: 1.45; }
+.reason-check { flex: none; display: grid; place-items: center; width: 15px; height: 15px; color: var(--green); background: #e6efe2; border-radius: 50%; font-size: 9px; font-weight: 700; }
+.verdict-false_start ~ .reason-card .reason-check { background: #f9e4dc; color: var(--red); }
+.rain-icon { color: var(--blue); background: #eaf1f8; }
+.rain-total { margin-left: auto; color: #2b5e91; font: 600 12px "Bricolage Grotesque",sans-serif; }
+.rain-total small { color: #777064; font: 400 9px "Inter",sans-serif; }
+.chart-wrap { margin-top: 9px; }
+.outlook { min-width: 0; }
+.outlook > .card-title { margin-bottom: 8px; }
+.outlook-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 5px; }
+.summary-chip { display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: 48px; padding: 5px 7px; border: 1px solid #e8e1d5; border-radius: 9px; color: #625c51; background: #fbf9f3; text-align: left; }
+.summary-chip span { overflow: hidden; color: #756d62; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.summary-chip strong { overflow: hidden; margin-top: 2px; color: #28251f; font: 600 12px/1.1 "Bricolage Grotesque",sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.summary-chip.active { border-color: #9ab99c; background: #edf4ea; }
+.outlook-days { display: grid; grid-auto-columns: minmax(46px,1fr); grid-auto-flow: column; gap: 4px; overflow-x: auto; margin: 9px -2px 6px; padding: 2px 2px 6px; scrollbar-width: thin; scrollbar-color: #d3cbbb transparent; }
+.outlook-day { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 46px; min-height: 62px; padding: 4px 3px; border: 1px solid #e7e0d4; border-radius: 9px; color: #5a544a; background: #faf8f2; }
+.outlook-day > span { font-size: 8px; }
+.outlook-day > strong { margin-top: 2px; color: #29261f; font: 600 14px/1 "Bricolage Grotesque",sans-serif; }
+.outlook-day > small { margin-top: 4px; color: #356a9d; font-size: 8px; white-space: nowrap; }
+.outlook-day.selected { border-color: #397c55; background: #eaf2e7; box-shadow: inset 0 0 0 1px #8caf8c; }
+.outlook-chart-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 9px; }
+.outlook-chart-head > div:first-child { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.outlook-chart-head strong { color: #39352e; font: 600 11px "Bricolage Grotesque",sans-serif; }
+.outlook-chart-head span { color: #756d62; font-size: 9px; }
+.range-switch,.measure-switch { display: flex; align-items: center; gap: 4px; }
+.range-switch button,.measure-switch button { min-height: 40px; padding: 0 9px; border: 1px solid #e1dacd; border-radius: 8px; color: #5d574d; background: #fbf9f3; font-size: 9px; white-space: nowrap; }
+.range-switch button.active,.measure-switch button.active { border-color: #89a486; color: #1d603d; background: #eaf2e7; font-weight: 600; }
+.measure-switch { gap: 5px; overflow-x: auto; margin-top: 7px; padding-bottom: 2px; scrollbar-width: none; }
+.measure-switch::-webkit-scrollbar { display: none; }
+.measure-switch button { flex: 1 0 auto; min-height: 44px; }
+.outlook-chart-wrap { position: relative; margin-top: 8px; padding-left: 32px; }
+.outlook-chart { display: block; width: 100%; height: 154px; overflow: visible; }
+.outlook-axis-labels { position: absolute; top: 10px; bottom: 23px; left: 0; display: flex; flex-direction: column; justify-content: space-between; color: #746d62; font-size: 8px; }
+.outlook-bar { fill: #5c96c9; }
+.outlook-bar.negative { fill: #bf7656; }
+.outlook-sowing-band { fill: #4d9667; opacity: .14; }
+.outlook-dry-band { fill: #e0b944; opacity: .17; }
+.outlook-selected-band { fill: #2b6cb0; opacity: .1; }
+.outlook-line { fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.temperature-high { stroke: #bf634a; fill: #bf634a; }
+.temperature-low { stroke: #4386b8; fill: #4386b8; }
+.soil-line { stroke: #49805b; }
+.soil-point { fill: #49805b; }
+.outlook-point { stroke: var(--card); stroke-width: 1.5; }
+.outlook-zero { stroke: #736b60; stroke-width: 1; stroke-dasharray: 3 3; }
+.outlook-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 11px; margin-top: 4px; color: #71695d; font-size: 8px; }
+.outlook-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.outlook-legend i { width: 8px; height: 8px; border-radius: 2px; }
+.legend-rain { background: #5c96c9; }.legend-sowing { background: #4d9667; }.legend-dry { background: #e0b944; }
+.outlook-note { margin: 5px 0 0; color: #6f685c; font-size: 9px; line-height: 1.4; }
+.chart-key { display: flex; align-items: center; gap: 12px; color: #777064; font-size: 9px; }
+.chart-key span { display: flex; align-items: center; gap: 4px; }
+.chart-key i { width: 7px; height: 7px; display: inline-block; border-radius: 2px; }
+.key-blue { background: #5593cb; }.key-green { background: #4d9667; }.key-dry { background: #e8d69e; }
+.rain-chart { display: block; width: 100%; height: 105px; margin-top: 6px; overflow: visible; }
+.chart-grid { stroke: #ece7de; stroke-width: 1; }
+.rain-bar { fill: #659ed0; transform-origin: center bottom; animation: grow-bar .3s ease-out both; }
+.rain-bar:nth-of-type(3n) { animation-delay: .025s; }
+.sowing-bar { fill: #43885b; }
+.uncertain-bar { opacity: .43; }
+.dry-zone { fill: #f8efda; }
+.today-line { stroke: #24352b; stroke-dasharray: 3 3; stroke-width: 1; }
+@keyframes grow-bar { from { opacity: .4; transform: scaleY(.1); } to { opacity: 1; transform: scaleY(1); } }
+.chart-dates,.chart-period { display: flex; justify-content: space-between; color: #71695d; font-size: 9px; }
+.chart-dates strong { color: #363b30; font-size: 9px; }
+.chart-period { padding-top: 7px; margin-top: 4px; border-top: 1px solid #eee9df; }
+.soil-icon { color: var(--green); background: #e8f0e5; }
+.estimate-tag { margin-left: auto; color: #827a6f; font-size: 8px; font-weight: 700; letter-spacing: .8px; }
+.gauge-label { display: flex; justify-content: space-between; margin: 12px 0 7px; color: #71695d; font-size: 10px; }
+.gauge-label strong { color: #464e3e; }
+.gauge-track { position: relative; height: 9px; border-radius: 6px; background: linear-gradient(90deg,#d9ba78 0%,#d9ba78 33%,#9fb87c 33%,#9fb87c 67%,#4f956b 67%,#4f956b 100%); }
+.gauge-marker { position: absolute; top: 50%; width: 14px; height: 14px; border: 2px solid white; border-radius: 50%; background: #1f1a14; box-shadow: 0 1px 3px #0005; transform: translate(-50%,-50%); }
+.gauge-scale { display: flex; justify-content: space-between; margin-top: 6px; color: #6d665a; font-size: 9px; }
+.field-metrics { margin-top: 14px; }
+.field-metrics > h2 { margin: 0 0 8px; color: #26231e; font: 600 15px/1.2 "Bricolage Grotesque",sans-serif; }
+.metric-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.metric-card { min-width: 0; overflow: hidden; border: 1px solid #e6dfd3; border-radius: 12px; background: var(--card); }
+.metric-card summary { display: flex; flex-direction: column; min-height: 132px; padding: 10px 11px; list-style: none; cursor: pointer; }
+.metric-card summary::-webkit-details-marker { display: none; }
+.metric-card-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-height: 23px; }
+.metric-icon { color: #596e50; font-size: 17px; font-weight: 600; }
+.metric-status { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px; border-radius: 8px; color: #425d45; background: #e8f0e5; font-size: 9px; font-weight: 600; white-space: nowrap; }
+.metric-status b { font-size: 10px; }
+.status-watch { color: #775511; background: #f7edd1; }
+.status-risk { color: #8b3328; background: #fae7e1; }
+.status-unknown { color: #5e594f; background: #efede8; }
+.metric-label { margin-top: 7px; color: #645d52; font-size: 10px; font-weight: 500; }
+.metric-value { display: block; margin-top: 2px; color: #29261f; font: 600 19px/1.15 "Bricolage Grotesque",sans-serif; overflow-wrap: anywhere; }
+.metric-sentence { display: block; margin-top: 4px; color: #6c655b; font-size: 9px; line-height: 1.4; }
+.metric-card > p { margin: 0; padding: 8px 11px 10px; border-top: 1px solid #eee8dd; color: #5d574d; font-size: 10px; line-height: 1.5; }
+.metric-card:focus-within { outline: 2px solid #256c9f; outline-offset: 2px; }
+.history-card { margin-top: 12px; padding: 14px 15px; }
+.history-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.history-icon { color: #60734f; background: #eaf0e4; }
+.history-updated { color: #776f63; font-size: 8px; }
+.history-intro { margin: 5px 0 8px; color: #6b645a; font-size: 9px; line-height: 1.4; }
+.history-summary { margin: 8px 0; color: #4b493c; font-size: 10px; font-weight: 500; line-height: 1.4; }
+.history-window { display: flex; justify-content: space-between; align-items: center; gap: 7px; padding: 8px 10px; border-radius: 9px; background: #edf3e9; color: #3e5e43; }
+.history-window strong { font-size: 9px; }
+.history-window span { text-align: right; font-size: 9px; font-weight: 600; }
+.history-calendar { display: grid; grid-template-columns: repeat(6,minmax(0,1fr)); gap: 4px; margin-top: 8px; }
+.history-month { display: flex; flex-direction: column; align-items: stretch; justify-content: center; min-width: 0; min-height: 60px; padding: 5px 6px; border: 1px solid #e8e1d5; border-radius: 8px; color: #514a3f; background: #fcfaf5; text-align: left; }
+.history-month.active { border-color: #7a9b70; background: #edf3e9; }
+.history-month strong { font-size: 9px; }
+.history-month > span { margin-top: 2px; color: #4e6f4f; font-size: 9px; font-weight: 600; }
+.history-month > i { height: 4px; margin-top: 3px; overflow: hidden; border-radius: 3px; background: #e8e5db; }
+.history-month > i > b { display: block; height: 100%; border-radius: inherit; background: #579266; }
+.history-month small { overflow: hidden; margin-top: 3px; color: #7a7165; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.history-season-heading { display: flex; align-items: center; justify-content: space-between; margin: 10px 0 5px; }
+.history-season-heading h3 { margin: 0; color: #38342d; font: 600 11px "Bricolage Grotesque",sans-serif; }
+.history-season-heading button { min-height: 40px; padding: 0 8px; border: 1px solid #e2dbcf; border-radius: 8px; color: #425f46; background: #faf8f2; font-size: 9px; }
+.history-seasons { max-height: 230px; overflow-y: auto; padding: 2px; border: 1px solid #eee8dd; border-radius: 10px; scrollbar-width: thin; scrollbar-color: #d3cbbb transparent; }
+.history-season { display: grid; grid-template-columns: 55px minmax(26px,1fr) 82px 20px; align-items: center; gap: 7px; width: 100%; min-height: 42px; padding: 4px 7px; border: 0; border-bottom: 1px solid #f0ece4; color: #5b554a; background: transparent; text-align: left; }
+.history-season:last-child { border-bottom: 0; }
+.history-season.active { border-radius: 7px; background: #f0f3e9; }
+.history-season > strong { color: #343128; font-size: 9px; }
+.season-rain-track { height: 6px; overflow: hidden; border-radius: 4px; background: #ede9df; }
+.season-rain-track i { display: block; height: 100%; border-radius: inherit; background: #6a9aca; }
+.season-onset { overflow: hidden; color: #696257; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.season-state { display: grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; font-size: 9px; font-weight: 700; }
+.season-state.reliable { color: #1d603d; background: #e2efde; }
+.season-state.unreliable { color: #8d392c; background: #f9e6df; }
+.selected-season { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; padding: 9px 10px; border: 1px solid #e9e3d8; border-radius: 9px; background: #fbf9f4; }
+.selected-season strong { color: #38342d; font-size: 9px; }
+.selected-season span,.selected-season small { color: #665f54; font-size: 9px; line-height: 1.4; }
+.history-footnote { margin: 8px 0 0; color: #787064; font-size: 8px; line-height: 1.4; }
+.history-loading { padding: 10px 0; }
+.history-skeleton { margin-top: 10px; }
+.history-error { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; border-radius: 9px; color: #7f3126; background: #ffede8; font-size: 9px; line-height: 1.4; }
+.history-error.subtle { margin-top: 5px; }
+.history-error button { min-height: 44px; padding: 0 8px; border: 0; color: #7d3327; background: transparent; text-decoration: underline; font-size: 9px; font-weight: 600; white-space: nowrap; }
+.history-empty { margin: 9px 0; color: #6f685c; font-size: 9px; line-height: 1.45; }
+.muted { color: #6e675c; font-size: 10px; }
+.share-card { display: flex; justify-content: space-between; align-items: center; gap: 9px; padding: 12px 15px; background: #f0eee3; border-color: #e7e2d4; }
+.share-heading .section-kicker { font-size: 9px; }
+.share-heading h2 { margin-top: 2px; font-size: 13px; }
+.share-decor { color: #6a8b5a; font-size: 21px; }
+.share-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.share-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 48px; padding: 0 10px; border: 1px solid #dcd7cb; border-radius: 10px; text-decoration: none; color: #39352e; background: #fffdf8; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.whatsapp { color: white; background: #217848; border-color: #217848; }
+.whatsapp span { font-size: 15px; }
+.whatsapp-glyph { width: 20px; height: 20px; flex: none; }
+.share-native { display: inline-flex; }
+.share-status { margin: 0; position: absolute; background: #1f1a14; color: white; padding: 6px 10px; border-radius: 7px; font-size: 10px; transform: translateY(25px); }
+.how-card { margin-top: 10px; }
+.how-card summary { display: flex; align-items: center; gap: 9px; min-height: 54px; padding: 7px 13px; list-style: none; cursor: pointer; }
+.how-card summary::-webkit-details-marker { display: none; }
+.how-icon { width: 25px; height: 25px; display: grid; place-items: center; flex: none; border-radius: 50%; background: #eee9dd; color: #6f664e; font: 600 13px "Bricolage Grotesque",sans-serif; }
+.how-card summary strong { display: block; color: #39352e; font: 600 11px "Bricolage Grotesque",sans-serif; }
+.how-card summary small { display: block; margin-top: 2px; color: #7d7568; font-size: 8px; }
+.details-chevron { margin-left: auto; color: #797165; font-size: 17px; transition: transform .2s; }
+.how-card[open] .details-chevron { transform: rotate(180deg); }
+.how-content { padding: 0 14px 12px 47px; color: #625b50; font-size: 10px; line-height: 1.55; }
+.how-content p { margin: 5px 0; }
+.footer-note { padding: 14px 0 6px; color: #72695c; text-align: center; font-size: 9px; }
+.footer-note span { color: #82916a; margin-right: 4px; }
+.offline-banner,.error-banner { display: flex; align-items: center; gap: 8px; padding: 9px 11px; margin-bottom: 10px; border-radius: 10px; background: #fff3d5; color: #694f15; font-size: 10px; line-height: 1.4; }
+.offline-banner > span,.error-banner > span { color: #a2740d; font-weight: 700; }
+.error-banner { background: #ffede8; color: #803225; }
+.error-banner > span { color: #b93828; }
+.error-banner p { margin: 0; flex: 1; }
+.error-banner button { min-height: 48px; padding: 8px 10px; border: 0; background: none; color: #792d20; text-decoration: underline; font-size: 10px; font-weight: 600; }
+.error-banner.subtle { margin-top: 5px; }
+.loading-card { padding: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--card); }
+.skeleton { border-radius: 8px; background: linear-gradient(90deg,#eee9df 20%,#f6f2ea 50%,#eee9df 80%); background-size: 200% 100%; animation: shimmer 1.2s ease-in-out infinite; }
+.skeleton-title { width: 75%; height: 34px; margin: 8px 0 16px; }
+.skeleton-line { width: 95%; height: 9px; margin: 8px 0; }.skeleton-line.short { width: 65%; }
+.skeleton-chart { height: 105px; margin-top: 18px; }
+.chart-loading { height: 105px; margin-top: 12px; border-radius: 8px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+button:focus-visible,a:focus-visible,summary:focus-visible,input:focus-visible { outline: 3px solid #256c9f; outline-offset: 3px; }
+@media (min-width: 1500px) { .advice-inner { padding-top: 30px; } .crop-chip { min-height: 48px; font-size: 11px; } .reason-card,.rain-card,.soil-card,.share-card { margin-top: 13px; } }
+@media (max-width: 1023px) {
+  .topbar { height: 64px; padding: 0 16px; }
+  .workspace { display: flex; flex-direction: column; height: calc(100dvh - 64px); min-height: 0; overflow: auto; }
+  .map-panel { position: relative; top: auto; flex: none; height: 46vh; min-height: 300px; max-height: 510px; }
+  .advice-panel { overflow: visible; }
+  .advice-inner { padding: 17px 17px 22px; }
+  .header-note { display: none; }
+  .map-title { top: 15px; left: 17px; }
+  .map-title { padding: 8px 10px; }
+  .map-title h2 { font-size: 21px; }
+  .map-search { top: 12px; right: 12px; width: min(285px,58%); }
+  .searchbox { height: 48px; }
+  .map-prompt { left: 13px; bottom: 16px; max-width: 260px; gap: 9px; padding: 10px 12px; }
+  .map-prompt.unselected { bottom: 130px; }
+  .map-locate { right: 12px; bottom: 15px; }
+  .map-panel .leaflet-control-zoom { margin-bottom: 76px; margin-right: 12px; }
+}
+@media (max-width: 480px) {
+  .topbar { height: 58px; padding: 0 13px; }
+  .brand { font-size: 20px; }
+  .brand-mark { width: 31px; height: 31px; border-radius: 11px 11px 11px 4px; }
+  .locate-top { min-height: 48px; padding: 0 10px; font-size: 11px; }
+  .workspace { height: calc(100dvh - 58px); }
+  .map-panel { height: 46vh; min-height: 285px; max-height: 410px; }
+  .advice-inner { padding: 13px 12px 20px; }
+  .crop-grid { gap: 6px; }
+  .crop-chip { min-height: 48px; gap: 5px; padding: 0 6px; font-size: 10px; }
+  .crop-chip > span { font-size: 14px; }
+  .crop-icon { font-size: 15px; }
+  .crop-dialog { position: fixed; inset: auto 0 0; width: 100%; max-height: 88dvh; margin: 0; border: 0; border-radius: 20px 20px 0 0; }
+  .crop-dialog-inner { max-height: 88dvh; padding: 18px 14px max(16px, env(safe-area-inset-bottom)); }
+  .crop-result { min-height: 60px; }
+  .verdict-card { padding: 15px 15px 13px; }
+  .verdict-card h1 { font-size: 32px; }
+  .verdict-top { right: 12px; top: 12px; }
+  .confidence { font-size: 9px; }
+  .verdict-meta { font-size: 9px; }
+  .reason-card,.rain-card,.soil-card { padding: 12px 13px; }
+  .share-card { align-items: flex-start; flex-direction: column; }
+  .share-heading { width: 100%; display: flex; justify-content: space-between; align-items: center; }
+  .share-actions { width: 100%; justify-content: stretch; }
+  .share-button { flex: 1; min-height: 48px; }
+  .map-title .section-kicker { font-size: 8px; }
+  .map-title h2 { max-width: 140px; font-size: 19px; }
+  .map-search { width: 60%; }
+  .map-prompt { max-width: 220px; padding: 9px 10px; }
+  .map-prompt.unselected { bottom: 130px; }
+  .quick-picks { left: 10px; right: 10px; bottom: 68px; }
+  .map-prompt strong { font-size: 13px; }
+  .map-prompt p { font-size: 10px; }
+  .history-calendar { grid-template-columns: repeat(4,minmax(0,1fr)); }
+}
+@media (max-width: 340px) { .crop-chip { font-size: 9px; } }
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
