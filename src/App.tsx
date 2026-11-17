@@ -71,7 +71,7 @@ export default function App() {
       ? [initialCrop, ...saved.filter(id => id !== initialCrop)]
       : saved
   })
-  const [irrigated, setIrrigated] = useState(initialParams.get('water') === '1' || true)
+  const [irrigated, setIrrigated] = useState(true)
   const [fieldChosen, setFieldChosen] = useState(initiallyChosen)
   const [place, setPlace] = useState(initiallyChosen
     ? copy.coordinatePlace.replace('{lat}', defaultPosition.lat.toFixed(2)).replace('{lon}', defaultPosition.lon.toFixed(2))
