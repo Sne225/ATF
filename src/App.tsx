@@ -10,11 +10,9 @@ import '@fontsource/bricolage-grotesque/latin-700.css'
 import SoilGauge from './components/SoilGauge'
 import CropPicker from './components/CropPicker'
 import MetricsGrid from './components/MetricsGrid'
-import { crops, visibleCrops, type Crop } from './lib/advisor/crops'
+import { crops, visibleCrops, quickPlaces, getWeather, searchPlaces, reversePlace, type Crop, type Forecast, type Place } from './lib/api'
 import { advise, type Advisory } from './lib/advisor/rules'
 import { calculateMetrics } from './lib/advisor/metrics'
-import { fetchWeather, type Forecast } from './lib/openMeteo'
-import { reversePlace, searchPlaces, type Place } from './lib/geo'
 import { buildShareMessage, shareMessage } from './lib/share'
 import { getWeatherCache } from './lib/storage'
 import copy from './i18n/en.json'
@@ -31,13 +29,6 @@ const readParam = (key: 'lat' | 'lon', fallback: number, min: number, max: numbe
 }
 const defaultPosition = { lat: readParam('lat', 0, -90, 90), lon: readParam('lon', 20, -180, 180) }
 const initialCrop = initialParams.get('crop')
-const quickPlaces = [
-  { name: copy.quickLilongwe, lat: -13.9626, lon: 33.7741 },
-  { name: copy.quickPolokwane, lat: -23.9045, lon: 29.4689 },
-  { name: copy.quickKisumu, lat: -0.0917, lon: 34.768 },
-  { name: copy.quickKano, lat: 12.0022, lon: 8.592 },
-  { name: copy.quickTamale, lat: 9.4034, lon: -0.8424 },
-]
 const isAfrica = (position: Position) => position.lat >= -35 && position.lat <= 37 && position.lon >= -18 && position.lon <= 52
 
 function Pin({ plant = false }: { plant?: boolean }) {
@@ -219,7 +210,7 @@ export default function App() {
     setLoading(true); setError('')
     setAdvisory(null); setWeather(null)
     try {
-      const result = await fetchWeather(position.lat, position.lon, controller.signal)
+      const result = await getWeather(position.lat, position.lon, controller.signal)
       if (id !== requestId.current) return
       const advice = advise(result, crop, irrigated)
       setWeather(result); setAdvisory(advice); setOffline(!navigator.onLine)

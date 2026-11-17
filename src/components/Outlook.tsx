@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { Advisory } from '../lib/advisor/rules'
-import type { Forecast } from '../lib/openMeteo'
+import type { Forecast } from '../lib/api'
 import copy from '../i18n/en.json'
 
 type Measure = 'rain' | 'temperature' | 'soil' | 'balance'
