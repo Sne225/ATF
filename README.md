@@ -6,106 +6,20 @@ the result, reasons, an interactive forecast, field-condition estimates, a
 20-year seasonal history, and a shareable message. It is decision support, not
 a guarantee of a successful harvest.
 
-## Run locally
+## Getting started
 
-Requires Node.js 20.19+ or 22.12+ for the UI, and Python 3.10+ for the backend.
-
-Start the FastAPI backend (serves the API and, once built, the frontend):
+Run instructions, API reference, architecture, data sources, and maintenance
+notes live in [`AGENTS.md`](./AGENTS.md). In short:
 
 ```sh
+# backend (FastAPI)
 pip install -r server/requirements.txt
 uvicorn server.main:app --reload --port 8000
-```
 
-Then start the UI dev server, which proxies `/api` to the backend:
-
-```sh
+# frontend (Vite)
 npm install
 npm run dev
 ```
-
-Open the local URL Vite prints. For a production build and local preview:
-
-```sh
-npm run typecheck
-npm test
-npm run build
-npm run preview
-```
-
-With `dist/` built, the backend also serves the app at `http://127.0.0.1:8000/`.
-
-Location access requires HTTPS or localhost. Without it, search for a place or
-tap the map to set the field.
-
-## API
-
-All data the UI reads — the crop catalogue, quick places, weather forecast,
-seasonal history, and place search/reverse geocoding — is served through a
-single client in `src/lib/api`. By default it runs in **server** mode, calling
-the FastAPI backend, which proxies Open-Meteo/Nominatim and adds a DeepSeek
-grow-advice endpoint:
-
-| Endpoint | Description |
-| --- | --- |
-| `GET /api/crops` | South African crop catalogue (`sa_crops.json`) |
-| `GET /api/weather?lat=&lon=` | Open-Meteo forecast, normalized |
-| `GET /api/history?lat=&lon=` | Open-Meteo ERA5 seasonal rainfall |
-| `GET /api/places/search?query=` | Geocoding (name → lat/lon) |
-| `GET /api/places/reverse?lat=&lon=` | Reverse geocoding (lat/lon → name) |
-| `GET /api/advice?crop=&lat=&lon=` | DeepSeek crop-suitability verdict (LLM) |
-
-Switch data sources with `VITE_API_MODE`:
-
-```sh
-VITE_API_MODE=mock npm run dev    # deterministic in-app data, no network
-VITE_API_MODE=live npm run dev    # browser calls Open-Meteo/Nominatim directly
-npm run dev                        # server mode (default) via the FastAPI backend
-```
-
-Override the backend base URL with `VITE_API_BASE` (default `/api`). Mock
-implementations live in `src/lib/api/mock/`; the switch is in
-`src/lib/api/config.ts`. The backend is in `server/`.
-
-## How the advice works
-
-The rule engine uses the field-local forecast dates from Open-Meteo (today is
-daily-array index 14 with `past_days=14`). It checks whether the three-day rain
-sum meets the crop's onset threshold, whether the longest following dry spell
-is within that crop's tolerance, and whether the modelled mean soil temperature
-meets its minimum. It checks cold soil first, then a plantable today, a false
-start, a plantable day in the next eight days, and otherwise recommends
-checking again in three days. Confidence is lowered when forecast evidence is
-uncertain or the estimated topsoil is dry despite sowing rain.
-
-The catalogue has 31 crops. Crop warmth and drought classes in
-`src/lib/advisor/crops.ts` provide illustrative soil-temperature, heat, onset
-rain, and dry-spell guides. These defaults need review by an agronomist familiar
-with local varieties, soils, and planting practices.
-
-Warmth guides (minimum soil temperature / heat guide) are cool 7°C / 30°C,
-mild 12°C / 35°C, warm 15°C / 38°C, and hot 18°C / 40°C. Drought guides
-(three-day onset rain / maximum dry spell) are delicate 25 mm / 4 days,
-sensitive 25 mm / 7 days, moderate 20 mm / 10 days, and hardy 20 mm / 12 days.
-
-The outlook lets the user inspect each of the 16 forecast days and compare
-rainfall, temperature, modelled topsoil moisture, and rain minus reference
-evapotranspiration over 7- or 16-day ranges. Missing readings remain unknown,
-not zero. Field-condition cards explain the estimates and distinguish good,
-watch, risk, and unavailable data.
-
-The historical panel requests 20 complete July-to-June seasons of daily
-precipitation from Open-Meteo's ERA5 archive. It compares monthly rainfall and
-the first crop-rule planting window in each season. A planting window requires
-the crop's three-day onset-rain guide and a following dry spell within its
-tolerance; earlier false starts are also counted. Historical patterns describe
-the past and are not a forecast or a field measurement.
-
-If watering is available, the advisor does not require sowing rain or a short
-dry spell, but still checks cold soil and highlights heat and very heavy rain.
-This is a user-selected assumption, not a prediction that irrigation water is
-available in practice. The rules are deterministic; no language model is
-called at runtime.
 
 ## Data and privacy
 
