@@ -8,7 +8,16 @@ a guarantee of a successful harvest.
 
 ## Run locally
 
-Requires Node.js 20.19+ or 22.12+.
+Requires Node.js 20.19+ or 22.12+ for the UI, and Python 3.10+ for the backend.
+
+Start the FastAPI backend (serves the API and, once built, the frontend):
+
+```sh
+pip install -r server/requirements.txt
+uvicorn server.main:app --reload --port 8000
+```
+
+Then start the UI dev server, which proxies `/api` to the backend:
 
 ```sh
 npm install
@@ -24,8 +33,39 @@ npm run build
 npm run preview
 ```
 
+With `dist/` built, the backend also serves the app at `http://127.0.0.1:8000/`.
+
 Location access requires HTTPS or localhost. Without it, search for a place or
 tap the map to set the field.
+
+## API
+
+All data the UI reads — the crop catalogue, quick places, weather forecast,
+seasonal history, and place search/reverse geocoding — is served through a
+single client in `src/lib/api`. By default it runs in **server** mode, calling
+the FastAPI backend, which proxies Open-Meteo/Nominatim and adds a DeepSeek
+grow-advice endpoint:
+
+| Endpoint | Description |
+| --- | --- |
+| `GET /api/crops` | South African crop catalogue (`sa_crops.json`) |
+| `GET /api/weather?lat=&lon=` | Open-Meteo forecast, normalized |
+| `GET /api/history?lat=&lon=` | Open-Meteo ERA5 seasonal rainfall |
+| `GET /api/places/search?query=` | Geocoding (name → lat/lon) |
+| `GET /api/places/reverse?lat=&lon=` | Reverse geocoding (lat/lon → name) |
+| `GET /api/advice?crop=&lat=&lon=` | DeepSeek crop-suitability verdict (LLM) |
+
+Switch data sources with `VITE_API_MODE`:
+
+```sh
+VITE_API_MODE=mock npm run dev    # deterministic in-app data, no network
+VITE_API_MODE=live npm run dev    # browser calls Open-Meteo/Nominatim directly
+npm run dev                        # server mode (default) via the FastAPI backend
+```
+
+Override the backend base URL with `VITE_API_BASE` (default `/api`). Mock
+implementations live in `src/lib/api/mock/`; the switch is in
+`src/lib/api/config.ts`. The backend is in `server/`.
 
 ## How the advice works
 
