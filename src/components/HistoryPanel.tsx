@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { analyzeHistory } from '../lib/advisor/history'
 import type { Crop } from '../lib/advisor/crops'
-import { fetchHistory, historyCacheKey, type CachedHistory } from '../lib/openMeteoHistory'
+import { getHistory, type CachedHistory } from '../lib/api'
+import { historyCacheKey } from '../lib/openMeteoHistory'
 import { getHistoryCache } from '../lib/storage'
 import copy from '../i18n/en.json'
 
@@ -30,7 +31,7 @@ export default function HistoryPanel({ lat, lon, crop }: { lat: number; lon: num
     setLoading(true)
     setError('')
     setHistory(null)
-    fetchHistory(lat, lon, controller.signal).then(result => {
+    getHistory(lat, lon, controller.signal).then(result => {
       if (active) setHistory(result)
     }).catch(reason => {
       if (!active || controller.signal.aborted) return

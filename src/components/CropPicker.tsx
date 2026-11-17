@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { crops, searchCrops, type Crop, type CropCategory } from '../lib/advisor/crops'
+import { crops, searchCrops, type Crop, type CropCategory } from '../lib/api'
 import copy from '../i18n/en.json'
 
 const categoryOrder: (CropCategory | 'all')[] = ['all', 'cereal', 'legume', 'root', 'vegetable', 'cash']
