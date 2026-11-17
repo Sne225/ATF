@@ -71,7 +71,7 @@ export default function App() {
       ? [initialCrop, ...saved.filter(id => id !== initialCrop)]
       : saved
   })
-  const [irrigated, setIrrigated] = useState(initialParams.get('water') === '1')
+  const [irrigated, setIrrigated] = useState(initialParams.get('water') === '1' || true)
   const [fieldChosen, setFieldChosen] = useState(initiallyChosen)
   const [place, setPlace] = useState(initiallyChosen
     ? copy.coordinatePlace.replace('{lat}', defaultPosition.lat.toFixed(2)).replace('{lon}', defaultPosition.lon.toFixed(2))
@@ -146,7 +146,7 @@ export default function App() {
   useEffect(() => {
     if (!mapHost.current || map.current) return
     const instance = L.map(mapHost.current, { zoomControl: false, attributionControl: false, scrollWheelZoom: false })
-      .setView([defaultPosition.lat, defaultPosition.lon], initiallyChosen ? 8 : 3)
+      .setView([defaultPosition.lat, defaultPosition.lon], initiallyChosen ? 9 : 4)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19, attribution: copy.openStreetMap,
     }).addTo(instance)
@@ -160,6 +160,7 @@ export default function App() {
       chooseCoordinatesRef.current({ lat, lon: lng })
     })
     instance.on('click', event => chooseCoordinatesRef.current({ lat: event.latlng.lat, lon: event.latlng.lng }))
+    setTimeout(() => instance.invalidateSize(), 0)
     map.current = instance
     pin.current = fieldMarker
     return () => { instance.remove(); map.current = null; pin.current = null }
