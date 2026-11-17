@@ -268,6 +268,7 @@ GitHub Copilot was used to scaffold and implement the application from the
 requirements, including the deterministic advisor and its tests. The resulting
 code and agricultural assumptions should be reviewed by maintainers and local
 agronomy experts before real-world use.
+
 =======
 Vite will display the local development URL in your terminal, usually:
 
