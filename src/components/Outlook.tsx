@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { CloudRain } from 'lucide-react'
 import type { Advisory } from '../lib/advisor/rules'
 import type { Forecast } from '../lib/api'
 import copy from '../i18n/en.json'
@@ -107,7 +108,7 @@ export default function Outlook({ weather, advisory }: { weather: Forecast; advi
   ]
 
   return <div className="outlook">
-    <div className="card-title"><span className="card-icon rain-icon">☔</span><h2>{copy.outlookTitle}</h2></div>
+    <div className="card-title"><span className="card-icon rain-icon" aria-hidden="true"><CloudRain /></span><h2>{copy.outlookTitle}</h2></div>
     <div className="outlook-summary" aria-label={copy.outlookSummary}>
       {selectedSummary.map(item => <button key={item.id} className={`summary-chip ${measure === item.id ? 'active' : ''}`} aria-pressed={measure === item.id} onClick={() => setMeasure(item.id)}>
         <span>{item.label}</span><strong>{item.value}</strong>

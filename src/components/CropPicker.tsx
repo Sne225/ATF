@@ -1,18 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Bean, Carrot, Flower2, Leaf, Nut, Plus, Search, Sprout, Wheat, X, type LucideIcon } from 'lucide-react'
 import { crops, searchCrops, type Crop, type CropCategory } from '../lib/api'
 import copy from '../i18n/en.json'
 
 const categoryOrder: (CropCategory | 'all')[] = ['all', 'cereal', 'legume', 'root', 'vegetable', 'cash']
-const categoryIcons: Record<CropCategory, string> = {
-  cereal: '🌾',
-  legume: '🫘',
-  root: '🥔',
-  vegetable: '🥬',
-  cash: '◈',
+const categoryIcons: Record<CropCategory, LucideIcon> = {
+  cereal: Wheat,
+  legume: Bean,
+  root: Carrot,
+  vegetable: Leaf,
+  cash: Sprout,
+}
+const cropIcons: Record<string, LucideIcon> = {
+  groundnuts: Nut,
+  'bambara-groundnuts': Nut,
+  carrots: Carrot,
+  sunflower: Flower2,
 }
 
 function CropIcon({ crop }: { crop: Crop }) {
-  return <span className={`crop-icon category-${crop.category}`} aria-hidden="true">{crop.emoji ?? categoryIcons[crop.category]}</span>
+  const Icon = cropIcons[crop.id] ?? categoryIcons[crop.category]
+  return <span className={`crop-icon category-${crop.category}`} aria-hidden="true"><Icon /></span>
 }
 
 export default function CropPicker({
@@ -73,7 +81,7 @@ export default function CropPicker({
         setCategory('all')
         setOpen(true)
       }}>
-        <span className="more-icon" aria-hidden="true">＋</span>
+        <span className="more-icon" aria-hidden="true"><Plus /></span>
         <span>{copy.moreCrops}<small>{copy.moreCropCount.replace('{count}', String(remainingCount))}</small></span>
       </button>
     </div>
@@ -91,10 +99,10 @@ export default function CropPicker({
       <div className="crop-dialog-inner">
         <div className="crop-dialog-header">
           <div><span className="section-kicker">{copy.cropDialogKicker}</span><h2 id="crop-dialog-title">{copy.cropDialogTitle}</h2></div>
-          <button type="button" className="dialog-close" aria-label={copy.closeDialog} onClick={() => setOpen(false)}>×</button>
+          <button type="button" className="dialog-close" aria-label={copy.closeDialog} onClick={() => setOpen(false)}><X aria-hidden="true" /></button>
         </div>
         <label className="crop-search">
-          <span aria-hidden="true">⌕</span>
+          <Search aria-hidden="true" />
           <input
             ref={searchRef}
             autoFocus

@@ -125,6 +125,9 @@ consult an extension officer before making a planting decision.
 - Mapbox GL JS renders the map, and the rainfall chart is a small SVG.
   The outlook and history panels are lazy-loaded.
   Fonts are self-hosted through Fontsource packages.
+- Interface icons use Lucide's bundled SVG outline set rather than emoji or
+  font glyphs, with consistent sizing and decorative icons hidden from screen
+  readers. Crop icons indicate crop families; names remain the primary labels.
 - The live GPS dot and accuracy circle are separate from the movable field pin.
 - The crop catalogue's recent selections are saved locally. No field names or
   user profiles are sent to a server.

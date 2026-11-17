@@ -1,4 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowUpRight, Check, ChevronDown, CircleAlert, ClipboardList, Clock, Copy, Droplets, Info, Leaf, MapPin, RefreshCw, Share2, Snowflake, Sun, TriangleAlert, WifiOff, type LucideIcon } from 'lucide-react'
 import '@fontsource/inter/latin-400.css'
 import '@fontsource/inter/latin-500.css'
 import '@fontsource/inter/latin-600.css'
@@ -28,6 +29,13 @@ const readParam = (key: 'lat' | 'lon', fallback: number, min: number, max: numbe
 }
 const defaultPosition = { lat: readParam('lat', 0, -90, 90), lon: readParam('lon', 20, -180, 180) }
 const initialCrop = initialParams.get('crop')
+const verdictIcons: Record<Advisory['verdict'], LucideIcon> = {
+  plant: Check,
+  false_start: TriangleAlert,
+  wait_window: ArrowUpRight,
+  wait_no_rain: Clock,
+  too_cold: Snowflake,
+}
 
 function verdictTitle(advisory: Advisory) {
   if (advisory.verdict === 'wait_window' && advisory.window?.start) {
@@ -38,7 +46,8 @@ function verdictTitle(advisory: Advisory) {
   return copy.verdicts[advisory.verdict]
 }
 function verdictIcon(verdict: Advisory['verdict']) {
-  return ({ plant: '✓', false_start: '!', wait_window: '↗', wait_no_rain: '◷', too_cold: '↓' })[verdict]
+  const Icon = verdictIcons[verdict]
+  return <Icon aria-hidden="true" />
 }
 const confidenceLabel: Record<Advisory['confidence'], string> = {
   high: copy.confHigh, medium: copy.confMedium, low: copy.confLow,
@@ -257,7 +266,7 @@ export default function App() {
   return <main className="app-shell">
     <header className="topbar">
       <a className="brand" href={location.pathname} aria-label={copy.homeLabel}><span className="brand-mark">m</span><span>{copy.brand}<small>{copy.tagline}</small></span></a>
-      <div className="header-note"><span className="weather-sun">☼</span> {copy.headerNote}</div>
+      <div className="header-note"><Sun className="weather-sun" aria-hidden="true" /> {copy.headerNote}</div>
     </header>
     <div className="workspace">
       <FieldMap lat={position.lat} lng={position.lon} locationLabel={place}
@@ -266,7 +275,7 @@ export default function App() {
         onLocate={useMyLocation} locationError={locationError} />
       <section className="advice-panel" aria-label={copy.adviceLabel}>
         <div className="advice-inner">
-          {offline && <div className="offline-banner" role="status"><span>◉</span> {advisory ? `${copy.offline} · ${new Date(weather?.fetchedAt ?? 0).toLocaleString()}` : copy.offlineEmpty}</div>}
+          {offline && <div className="offline-banner" role="status"><WifiOff aria-hidden="true" /> {advisory ? `${copy.offline} · ${new Date(weather?.fetchedAt ?? 0).toLocaleString()}` : copy.offlineEmpty}</div>}
           <div className="crop-section">
             <div className="section-heading"><h2>{copy.cropQuestion}</h2></div>
             <CropPicker visible={pickerCrops} selectedId={cropId} remainingCount={crops.length - pickerCrops.length} onSelect={chooseCrop} />
@@ -278,7 +287,7 @@ export default function App() {
             {(crop.method === 'transplant' || crop.method === 'cutting') && !irrigated && <p className="rain-fed-note">{copy.rainFedNote}</p>}
           </div>
           {loading && !advisory ? <div className="loading-card" aria-label={copy.loading}><div className="skeleton skeleton-title" /><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line short" /><div className="skeleton skeleton-chart" /></div> : null}
-          {error && <div className={`error-banner ${advisory ? 'subtle' : ''}`} role="alert"><span>!</span><p>{error}</p><button onClick={() => void loadWeather()}>{copy.retry}</button></div>}
+          {error && <div className={`error-banner ${advisory ? 'subtle' : ''}`} role="alert"><CircleAlert aria-hidden="true" /><p>{error}</p><button onClick={() => void loadWeather()}>{copy.retry}</button></div>}
           {advisory && weather && <>
             <article className={`verdict-card verdict-${advisory.verdict}`} aria-live="polite">
               <div className="verdict-top"><span className="verdict-symbol">{verdictIcon(advisory.verdict)}</span><button className={`confidence confidence-${advisory.confidence}`} aria-label={copy.confidenceExplain} aria-expanded={confidenceOpen} onClick={() => setConfidenceOpen(!confidenceOpen)}><span className="confidence-dot" />{confidenceLabel[advisory.confidence]} {copy.confidence}</button></div>
@@ -286,13 +295,13 @@ export default function App() {
               <span className="verdict-eyebrow">{copy.eyebrows[advisory.verdict]}</span>
               <h1>{verdictTitle(advisory)}</h1>
               <p>{copy.support[advisory.verdict]}</p>
-              <div className="verdict-meta"><span>⌖ {place}</span><span>↻ {todayLabel} · {new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit' }).format(weather.fetchedAt)}</span></div>
+              <div className="verdict-meta"><span><MapPin aria-hidden="true" /> {place}</span><span><RefreshCw aria-hidden="true" /> {todayLabel} · {new Intl.DateTimeFormat('en', { hour: '2-digit', minute: '2-digit' }).format(weather.fetchedAt)}</span></div>
             </article>
             <div className="reason-card card">
-              <div className="card-title"><span className="card-icon">✳</span><h2>{copy.why}</h2></div>
+              <div className="card-title"><span className="card-icon" aria-hidden="true"><ClipboardList /></span><h2>{copy.why}</h2></div>
               <ul>{advisory.reasons.map((reason, index) => {
                 const blocksPlanting = ['falseStart', 'tooCold', 'noRain', 'soil_dry'].includes(reason.key)
-                return <li key={`${reason.key}-${index}`}><span className={`reason-check ${blocksPlanting ? 'blocking' : 'supporting'}`}>{blocksPlanting ? '!' : '✓'}</span><span>{reasonText(reason)}</span></li>
+                return <li key={`${reason.key}-${index}`}><span className={`reason-check ${blocksPlanting ? 'blocking' : 'supporting'}`} aria-hidden="true">{blocksPlanting ? <CircleAlert /> : <Check />}</span><span>{reasonText(reason)}</span></li>
               })}</ul>
             </div>
             <div className="rain-card card">
@@ -301,7 +310,7 @@ export default function App() {
               </Suspense>
             </div>
             <div className="soil-card card">
-              <div className="card-title"><span className="card-icon soil-icon">◒</span><h2>{copy.soilMoisture}</h2><span className="estimate-tag">{copy.estimate}</span></div>
+              <div className="card-title"><span className="card-icon soil-icon" aria-hidden="true"><Droplets /></span><h2>{copy.soilMoisture}</h2><span className="estimate-tag">{copy.estimate}</span></div>
               <SoilGauge advisory={advisory} />
             </div>
             <MetricsGrid metrics={calculateMetrics(weather, crop, advisory)} crop={crop} advisory={advisory} irrigated={irrigated} />
@@ -310,15 +319,15 @@ export default function App() {
             </Suspense>
             <div className="share-card card">
               <div className="share-heading"><div><span className="section-kicker">{copy.passItOn}</span><h2>{copy.shareAdvice}</h2></div></div>
-              <div className="share-actions"><a className="share-button whatsapp" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(message)}`}><svg className="whatsapp-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.4 8.4 0 0 1-12.4 7.3L3 20l1.2-4.9a8.4 8.4 0 1 1 16.3-3.5Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M8.2 7.8c.2-.5.4-.5.7-.5h.5c.2 0 .4.1.5.4l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.2.2-.2.4 0 .6.4.7 1.1 1.4 1.8 1.8.2.1.4.1.6-.1l.7-.8c.2-.2.4-.2.6-.1l1.6.8c.3.1.4.3.4.5 0 .3-.2 1.1-.7 1.5-.5.4-1.1.6-1.8.4-1-.2-2.2-.8-3.4-1.9-1.3-1.1-2.2-2.5-2.4-3.5-.2-.9.1-1.6.8-2Z" fill="currentColor"/></svg>{copy.whatsapp}</a>{typeof navigator.share === 'function' && <button className="share-button share-native" onClick={() => void shareNative()}>{copy.share} <span>↗</span></button>}<button className="share-button copy-link" onClick={() => void copyLink()}>{copy.copyLink} <span>⧉</span></button></div>
+              <div className="share-actions"><a className="share-button whatsapp" target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(message)}`}><svg className="whatsapp-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.6a8.4 8.4 0 0 1-12.4 7.3L3 20l1.2-4.9a8.4 8.4 0 1 1 16.3-3.5Z" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M8.2 7.8c.2-.5.4-.5.7-.5h.5c.2 0 .4.1.5.4l.7 1.7c.1.2 0 .4-.1.6l-.5.6c-.2.2-.2.4 0 .6.4.7 1.1 1.4 1.8 1.8.2.1.4.1.6-.1l.7-.8c.2-.2.4-.2.6-.1l1.6.8c.3.1.4.3.4.5 0 .3-.2 1.1-.7 1.5-.5.4-1.1.6-1.8.4-1-.2-2.2-.8-3.4-1.9-1.3-1.1-2.2-2.5-2.4-3.5-.2-.9.1-1.6.8-2Z" fill="currentColor"/></svg>{copy.whatsapp}</a>{typeof navigator.share === 'function' && <button className="share-button share-native" onClick={() => void shareNative()}>{copy.share} <Share2 aria-hidden="true" /></button>}<button className="share-button copy-link" onClick={() => void copyLink()}>{copy.copyLink} <Copy aria-hidden="true" /></button></div>
               {shareStatus && <p className="share-status" role="status">{shareStatus}</p>}
             </div>
           </>}
           <details className="how-card card">
-            <summary><span className="how-icon">i</span><span><strong>{copy.howTitle}</strong><small>{copy.howSubtitle}</small></span><span className="details-chevron">⌄</span></summary>
+            <summary><span className="how-icon" aria-hidden="true"><Info /></span><span><strong>{copy.howTitle}</strong><small>{copy.howSubtitle}</small></span><ChevronDown className="details-chevron" aria-hidden="true" /></summary>
             <div className="how-content"><p>{copy.howText}</p><p><strong>{copy.disclaimer}</strong></p><p>{copy.weatherBy}. {copy.mapboxAttribution}.</p></div>
           </details>
-          <footer className="footer-note"><span>✦</span> {copy.footer}</footer>
+          <footer className="footer-note"><Leaf aria-hidden="true" /> {copy.footer}</footer>
         </div>
       </section>
     </div>

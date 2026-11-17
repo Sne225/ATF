@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Check, History, TriangleAlert } from 'lucide-react'
 import { analyzeHistory } from '../lib/advisor/history'
 import type { Crop } from '../lib/advisor/crops'
 import { getHistory, type CachedHistory } from '../lib/api'
@@ -59,7 +60,7 @@ export default function HistoryPanel({ lat, lon, crop }: { lat: number; lon: num
 
   return <section className="history-card card" aria-labelledby="history-title">
     <div className="history-heading">
-      <div className="card-title"><span className="card-icon history-icon">⌁</span><h2 id="history-title">{copy.historyTitle}</h2></div>
+      <div className="card-title"><span className="card-icon history-icon" aria-hidden="true"><History /></span><h2 id="history-title">{copy.historyTitle}</h2></div>
       {history && <span className="history-updated">{copy.historyUpdated} {lastUpdated}</span>}
     </div>
     <p className="history-intro">{copy.historyIntro}</p>
@@ -96,7 +97,7 @@ export default function HistoryPanel({ lat, lon, crop }: { lat: number; lon: num
           <strong>{season.label}</strong>
           <span className="season-rain-track"><i style={{ width: `${season.rainfall === undefined ? 0 : season.rainfall / maxRainfall * 100}%` }} /></span>
           <span className="season-onset">{season.onset ? dateLabel(season.onset.date) : season.falseStart ? copy.historyFalseStart : copy.historyNoOnset}</span>
-          <span className={`season-state ${season.onset ? 'reliable' : 'unreliable'}`}>{season.onset ? '✓' : '!'}</span>
+          <span className={`season-state ${season.onset ? 'reliable' : 'unreliable'}`} aria-hidden="true">{season.onset ? <Check /> : <TriangleAlert />}</span>
         </button>)}
         {filteredSeasons.length === 0 && <p className="history-empty">{copy.historyNoMonth}</p>}
       </div>
