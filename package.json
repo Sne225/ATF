@@ -13,13 +13,14 @@
   "dependencies": {
     "@fontsource/bricolage-grotesque": "latest",
     "@fontsource/inter": "latest",
-    "leaflet": "latest",
+    "lucide-react": "^1.74.0",
+    "mapbox-gl": "^3.35.0",
     "react": "latest",
     "react-dom": "latest"
   },
   "devDependencies": {
     "@tailwindcss/vite": "latest",
-    "@types/leaflet": "latest",
+    "@types/mapbox-gl": "^3.4.1",
     "@types/react": "latest",
     "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
@@ -27,5 +28,8 @@
     "typescript": "latest",
     "vite": "latest",
     "vitest": "latest"
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
   }
 }

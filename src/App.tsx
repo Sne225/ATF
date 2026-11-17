@@ -1,6 +1,4 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
 import '@fontsource/inter/latin-400.css'
 import '@fontsource/inter/latin-500.css'
 import '@fontsource/inter/latin-600.css'
@@ -10,7 +8,8 @@ import '@fontsource/bricolage-grotesque/latin-700.css'
 import SoilGauge from './components/SoilGauge'
 import CropPicker from './components/CropPicker'
 import MetricsGrid from './components/MetricsGrid'
-import { crops, visibleCrops, quickPlaces, getWeather, searchPlaces, reversePlace, type Crop, type Forecast, type Place } from './lib/api'
+import FieldMap, { type GPSPosition } from './components/FieldMap'
+import { crops, visibleCrops, getWeather, reversePlace, type Crop, type Forecast } from './lib/api'
 import { advise, type Advisory } from './lib/advisor/rules'
 import { calculateMetrics } from './lib/advisor/metrics'
 import { buildShareMessage, shareMessage } from './lib/share'
@@ -29,14 +28,6 @@ const readParam = (key: 'lat' | 'lon', fallback: number, min: number, max: numbe
 }
 const defaultPosition = { lat: readParam('lat', 0, -90, 90), lon: readParam('lon', 20, -180, 180) }
 const initialCrop = initialParams.get('crop')
-const isAfrica = (position: Position) => position.lat >= -35 && position.lat <= 37 && position.lon >= -18 && position.lon <= 52
-
-function Pin({ plant = false }: { plant?: boolean }) {
-  return <svg viewBox="0 0 42 54" className={`field-pin ${plant ? 'plant-pin' : ''}`} aria-hidden="true">
-    <path d="M21 2C10.5 2 2 10.4 2 20.8 2 35 21 52 21 52s19-17 19-31.2C40 10.4 31.5 2 21 2Z" fill="currentColor" stroke="#fffdf8" strokeWidth="2.5" />
-    <circle cx="21" cy="20" r="7" fill="#fffdf8" />
-  </svg>
-}
 
 function verdictTitle(advisory: Advisory) {
   if (advisory.verdict === 'wait_window' && advisory.window?.start) {
@@ -81,24 +72,17 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [offline, setOffline] = useState(!navigator.onLine)
-  const [search, setSearch] = useState('')
-  const [results, setResults] = useState<Place[]>([])
-  const [searching, setSearching] = useState(false)
   const [locationError, setLocationError] = useState('')
+  const [gpsPosition, setGpsPosition] = useState<GPSPosition | null>(null)
+  const [gpsWatching, setGpsWatching] = useState(false)
   const [shareStatus, setShareStatus] = useState('')
   const [confidenceOpen, setConfidenceOpen] = useState(false)
-  const mapHost = useRef<HTMLDivElement>(null)
-  const map = useRef<L.Map | null>(null)
-  const pin = useRef<L.Marker | null>(null)
-  const liveCircle = useRef<L.Circle | null>(null)
   const watchId = useRef<number | null>(null)
   const requestId = useRef(0)
   const weatherController = useRef<AbortController | null>(null)
   const reverseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const reverseController = useRef<AbortController | null>(null)
   const locationRevision = useRef(0)
-  const searchController = useRef<AbortController | null>(null)
-  const gpsMarker = useRef<L.Marker | null>(null)
   const gpsMovedField = useRef(false)
   const crop: Crop = crops.find(c => c.id === cropId) ?? crops[0]!
   const pickerCrops = visibleCrops(recentCropIds, cropId)
@@ -130,44 +114,14 @@ export default function App() {
     const params = new URLSearchParams(location.search)
     params.set('lat', next.lat.toFixed(3)); params.set('lon', next.lon.toFixed(3)); params.set('crop', cropId)
     history.replaceState(null, '', `${location.pathname}?${params.toString()}`)
-    map.current?.flyTo([next.lat, next.lon], Math.max(map.current.getZoom(), 8), { duration: 0.35 })
   }, [cropId])
   const updatePositionRef = useRef(updatePosition)
   updatePositionRef.current = updatePosition
-  const chooseCoordinatesRef = useRef((next: Position) => {
+  const chooseCoordinates = useCallback((lat: number, lng: number, name?: string) => {
     setFieldChosen(true)
-    updatePositionRef.current(next)
-  })
-  chooseCoordinatesRef.current = next => {
-    setFieldChosen(true)
-    updatePositionRef.current(next)
-  }
-
-  useEffect(() => {
-    if (!mapHost.current || map.current) return
-    const instance = L.map(mapHost.current, { zoomControl: false, attributionControl: false, scrollWheelZoom: false })
-      .setView([defaultPosition.lat, defaultPosition.lon], initiallyChosen ? 8 : 3)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19, attribution: copy.openStreetMap,
-    }).addTo(instance)
-    L.control.zoom({ position: 'bottomright' }).addTo(instance)
-    const fieldMarker = L.marker([defaultPosition.lat, defaultPosition.lon], {
-      icon: L.divIcon({ className: 'field-marker-wrap', html: '<div class="pin-drop"><svg viewBox="0 0 42 54" aria-hidden="true"><path d="M21 2C10.5 2 2 10.4 2 20.8 2 35 21 52 21 52s19-17 19-31.2C40 10.4 31.5 2 21 2Z" fill="#1f7a4d" stroke="#fffdf8" stroke-width="2.5"/><circle cx="21" cy="20" r="7" fill="#fffdf8"/></svg></div>', iconSize: [42, 54], iconAnchor: [21, 52] }),
-      draggable: true, keyboard: true, title: copy.fieldMarkerTitle,
-    }).addTo(instance)
-    fieldMarker.on('dragend', () => {
-      const { lat, lng } = fieldMarker.getLatLng()
-      chooseCoordinatesRef.current({ lat, lon: lng })
-    })
-    instance.on('click', event => chooseCoordinatesRef.current({ lat: event.latlng.lat, lon: event.latlng.lng }))
-    map.current = instance
-    pin.current = fieldMarker
-    return () => { instance.remove(); map.current = null; pin.current = null }
+    updatePositionRef.current({ lat, lon: lng }, name)
+    setLocationError('')
   }, [])
-
-  useEffect(() => {
-    pin.current?.setLatLng([position.lat, position.lon])
-  }, [position])
 
   useEffect(() => {
     if (!initiallyChosen) return
@@ -236,24 +190,10 @@ export default function App() {
     return () => { window.removeEventListener('online', online); window.removeEventListener('offline', offlineNow) }
   }, [])
 
-  useEffect(() => {
-    if (search.trim().length < 2) { setResults([]); setSearching(false); searchController.current?.abort(); return }
-    const timer = setTimeout(async () => {
-      searchController.current?.abort()
-      const controller = new AbortController(); searchController.current = controller
-      setSearching(true)
-      try { setResults(await searchPlaces(search.trim(), controller.signal)) }
-      catch (reason) { if (!controller.signal.aborted) setLocationError(reason instanceof Error ? reason.message : copy.searchFailureMessage) }
-      finally { if (!controller.signal.aborted) setSearching(false) }
-    }, 350)
-    return () => clearTimeout(timer)
-  }, [search])
-
   useEffect(() => () => {
     if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current)
     if (reverseTimer.current) clearTimeout(reverseTimer.current)
     reverseController.current?.abort()
-    searchController.current?.abort()
     weatherController.current?.abort()
   }, [])
 
@@ -262,34 +202,31 @@ export default function App() {
     setLocationError('')
     if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current)
     gpsMovedField.current = false
+    setGpsPosition(null)
+    setGpsWatching(true)
     watchId.current = navigator.geolocation.watchPosition(
       ({ coords }) => {
         const next = { lat: coords.latitude, lon: coords.longitude, accuracy: coords.accuracy }
-        if (liveCircle.current && map.current) {
-          liveCircle.current.setLatLng([next.lat, next.lon]).setRadius(next.accuracy)
-        } else if (map.current) {
-          liveCircle.current = L.circle([next.lat, next.lon], { radius: next.accuracy, color: '#2b6cb0', weight: 1.5, fillColor: '#2b6cb0', fillOpacity: 0.12 }).addTo(map.current)
-        }
-        if (gpsMarker.current) gpsMarker.current.setLatLng([next.lat, next.lon])
-        else if (map.current) gpsMarker.current = L.marker([next.lat, next.lon], {
-          icon: L.divIcon({ className: 'gps-marker-wrap', html: '<span class="gps-dot" aria-label="Your live location"></span>', iconSize: [22, 22], iconAnchor: [11, 11] }),
-          interactive: false,
-        }).addTo(map.current)
+        setGpsPosition(next)
+        setLocationError('')
         if (!gpsMovedField.current) {
           gpsMovedField.current = true
-          chooseCoordinatesRef.current({ lat: next.lat, lon: next.lon })
+          chooseCoordinates(next.lat, next.lon)
         }
       },
-      error => setLocationError(error.code === 1 ? copy.locationDenied : copy.locationFailed),
+      error => {
+        setLocationError(error.code === 1 ? copy.locationDenied : copy.locationFailed)
+        if (error.code === 1) {
+          if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current)
+          watchId.current = null
+          setGpsWatching(false)
+          setGpsPosition(null)
+        }
+      },
       { enableHighAccuracy: true, maximumAge: 30000, timeout: 15000 },
     )
   }
 
-  const choosePlace = (result: Place) => {
-    setFieldChosen(true)
-    updatePosition({ lat: result.lat, lon: result.lon }, result.name)
-    setSearch(''); setResults([]); setLocationError('')
-  }
   const message = useMemo(() => advisory
     ? buildShareMessage(crop, place, weather?.days[14]?.date ?? '', advisory, location.href)
     : '', [advisory, crop, place, weather])
@@ -316,7 +253,6 @@ export default function App() {
   const confidenceExplanation = advisory?.verdict === 'too_cold'
     ? copy.coldConfidence[advisory.confidence]
     : copy.confidenceTooltip
-  const quickPicksVisible = !fieldChosen || !isAfrica(position)
 
   return <main className="app-shell">
     <header className="topbar">
@@ -324,29 +260,10 @@ export default function App() {
       <div className="header-note"><span className="weather-sun">☼</span> {copy.headerNote}</div>
     </header>
     <div className="workspace">
-      <section className="map-panel" aria-label={copy.chooseFieldLabel}>
-        <div ref={mapHost} className="map-canvas" />
-        <div className="map-wash" aria-hidden="true" />
-        <div className={`map-title ${fieldChosen ? 'chosen' : 'unchosen'}`}>
-          <span className="section-kicker">{copy.fieldKicker}</span>
-          <h2>{fieldChosen ? place.split(',')[0] : copy.africaTitle}</h2>
-        </div>
-        <div className="map-search">
-          <label className="searchbox"><span aria-hidden="true">⌕</span><input aria-label={copy.searchLabel} placeholder={copy.searchPlaceholder} value={search} onChange={event => { setSearch(event.target.value); setLocationError('') }} /><button aria-label={copy.clearSearch} onClick={() => { setSearch(''); setResults([]) }}>×</button></label>
-          {(searching || results.length > 0) && <div className="search-results">{searching ? <p>{copy.searching}</p> : results.map((result, index) => <button key={`${result.lat}-${result.lon}-${index}`} onClick={() => choosePlace(result)}>{result.name}<span>↗</span></button>)}</div>}
-          {search.length > 1 && !searching && results.length === 0 && <div className="search-results"><p>{copy.noResults}</p></div>}
-          {locationError && <p className="location-error">{locationError}</p>}
-        </div>
-        {!fieldChosen && <div className="map-prompt unselected"><span className="prompt-pin"><Pin /></span><div><strong>{copy.mapPrompt}</strong><p>{copy.mapExplain}</p></div></div>}
-        {quickPicksVisible && <div className="quick-picks" aria-label={copy.quickPicks}>
-          {quickPlaces.map(placeOption => <button key={placeOption.name} onClick={() => {
-            setFieldChosen(true)
-            updatePosition({ lat: placeOption.lat, lon: placeOption.lon }, placeOption.name)
-          }}>{placeOption.name}</button>)}
-        </div>}
-        <button className="map-locate" onClick={useMyLocation}><span>◎</span> {copy.useLocationLabel}</button>
-        <span className="map-attribution">{copy.openStreetMap}</span>
-      </section>
+      <FieldMap lat={position.lat} lng={position.lon} locationLabel={place}
+        fieldChosen={fieldChosen} onLocationChange={chooseCoordinates}
+        gpsPosition={gpsPosition} gpsWatching={gpsWatching}
+        onLocate={useMyLocation} locationError={locationError} />
       <section className="advice-panel" aria-label={copy.adviceLabel}>
         <div className="advice-inner">
           {offline && <div className="offline-banner" role="status"><span>◉</span> {advisory ? `${copy.offline} · ${new Date(weather?.fetchedAt ?? 0).toLocaleString()}` : copy.offlineEmpty}</div>}
@@ -399,7 +316,7 @@ export default function App() {
           </>}
           <details className="how-card card">
             <summary><span className="how-icon">i</span><span><strong>{copy.howTitle}</strong><small>{copy.howSubtitle}</small></span><span className="details-chevron">⌄</span></summary>
-            <div className="how-content"><p>{copy.howText}</p><p><strong>{copy.disclaimer}</strong></p><p>{copy.weatherBy}. {copy.openStreetMap}.</p></div>
+            <div className="how-content"><p>{copy.howText}</p><p><strong>{copy.disclaimer}</strong></p><p>{copy.weatherBy}. {copy.mapboxAttribution}.</p></div>
           </details>
           <footer className="footer-note"><span>✦</span> {copy.footer}</footer>
         </div>
