@@ -1,26 +1,152 @@
+
 # Mvula
 
-Mvula is a small, phone-first planting decision aid for one field at a time. It
-compares recent and forecast rainfall with illustrative crop rules, then shows
-the result, reasons, an interactive forecast, field-condition estimates, a
-20-year seasonal history, and a shareable message. It is decision support, not
-a guarantee of a successful harvest.
+**Helping small-scale farmers make better planting decisions.**
 
-## Getting started
+Mvula is a phone-first agricultural decision-support application that helps small-scale farmers assess when conditions are suitable for planting.
 
-Run instructions, API reference, architecture, data sources, and maintenance
-notes live in [`AGENTS.md`](./AGENTS.md). In short:
+It combines rainfall observations, weather forecasts, soil estimates, crop requirements and historical rainfall patterns to provide practical planting guidance.
 
-```sh
-# backend (FastAPI)
+The goal is to make agricultural information more accessible and help farmers make informed decisions in the face of unpredictable rainfall and changing weather conditions.
+
+## The Problem
+
+For many small-scale farmers, deciding when to plant is a difficult and consequential decision.
+
+Planting too early can expose seeds and seedlings to dry spells. Planting too late can shorten the growing season and affect potential yields.
+
+Farmers may not have easy access to reliable weather information, agricultural advisory services or tools that translate weather data into practical planting recommendations.
+
+Mvula aims to bridge this gap by bringing relevant environmental and crop information together in one accessible application.
+
+## How It Works
+
+Mvula evaluates planting conditions using several factors:
+
+- **Recent rainfall:** Helps assess whether enough rain has fallen to support planting.
+- **Weather forecasts:** Provides an indication of expected rainfall and potential dry spells.
+- **Soil conditions:** Uses soil estimates to help assess moisture availability.
+- **Crop requirements:** Considers the environmental requirements of different crops.
+- **Historical rainfall:** Provides context about seasonal rainfall patterns and planting windows.
+
+The application processes these inputs through its decision-support rules engine and presents planting guidance to the user.
+
+Recommendations are intended as decision-support information, not guarantees of future rainfall or harvest outcomes.
+
+## Features
+
+- Phone-first user interface designed for accessibility.
+- Crop-specific planting guidance.
+- Rainfall and weather forecast assessment.
+- Soil condition estimates.
+- Historical rainfall analysis.
+- Irrigation-aware recommendations.
+- Interactive planting advice.
+- Backend API for weather and agricultural data.
+- Mock, server and live API modes.
+
+## Technology Stack
+
+### Frontend
+- React
+- TypeScript
+- Vite
+
+### Backend
+- Python
+- FastAPI
+
+### Other
+- JavaScript/TypeScript decision-support rules engine
+- Weather and rainfall data integrations
+- DeepSeek integration for AI-assisted advice
+
+## Project Structure
+
+```text
+ATF/
+├── server/                 # FastAPI backend
+│   └── main.py
+├── src/
+│   └── lib/
+│       └── advisor/        # Planting decision-support logic
+├── public/                 # Static assets
+├── grow_advisor.py         # Agricultural advisory functionality
+├── crop_suitability.py     # Crop suitability analysis
+├── package.json
+└── README.md
+```
+
+## Getting Started
+
+### Prerequisites
+
+Install the following:
+
+- Node.js 20.19+ or 22.12+
+- npm
+- Python 3.10+
+- Git
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/Sne225/ATF.git
+cd ATF
+```
+
+### 2. Set up the backend
+
+Create and activate a Python virtual environment.
+
+**Windows PowerShell:**
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+**Linux/macOS:**
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r server/requirements.txt
-uvicorn server.main:app --reload --port 8000
+```
 
-# frontend (Vite)
-npm install
+Start the backend:
+
+```bash
+uvicorn server.main:app --reload --port 8000
+```
+
+The API should now be available at:
+
+- API: http://localhost:8000
+- Interactive API documentation: http://localhost:8000/docs
+
+### 3. Set up the frontend
+
+Open another terminal in the project directory.
+
+Install dependencies:
+
+```bash
+npm ci
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
+<<<<<<< Updated upstream
 For the interactive map, copy `.env.example` to `.env.local` and set a public
 Mapbox access token:
 
@@ -142,3 +268,124 @@ GitHub Copilot was used to scaffold and implement the application from the
 requirements, including the deterministic advisor and its tests. The resulting
 code and agricultural assumptions should be reviewed by maintainers and local
 agronomy experts before real-world use.
+=======
+Vite will display the local development URL in your terminal, usually:
+
+```text
+http://localhost:5173
+```
+
+Open that address in your browser.
+
+## API Modes
+
+The application supports different API modes:
+
+| Mode | Description |
+|---|---|
+| `mock` | Uses mock data for development and testing. |
+| `server` | Uses the local FastAPI backend. |
+| `live` | Uses live data integrations where configured. |
+
+Check the application's configuration and environment variables to select the appropriate mode.
+
+## AI-Powered Advice
+
+The backend includes a `/api/advice` endpoint that integrates with DeepSeek to provide AI-assisted advice.
+
+If you want to use this functionality, configure the relevant API key in your backend environment.
+
+For example, create a `.env` file using the environment variable expected by the backend implementation.
+
+**Important:** The core planting decision-support rules are separate from the DeepSeek integration. The application should not depend on an AI API key to evaluate its deterministic planting rules.
+
+## Testing and Building
+
+Run the available frontend tests:
+
+```bash
+npm test
+```
+
+Build the frontend:
+
+```bash
+npm run build
+```
+
+If the test command is unavailable, inspect the scripts defined in `package.json`.
+
+## Data Sources and Limitations
+
+The quality of planting recommendations depends on the availability and accuracy of weather, rainfall and soil information.
+
+Users should understand that:
+
+- Weather forecasts are estimates and can change.
+- Soil conditions may be estimated rather than measured directly.
+- Historical rainfall does not guarantee future rainfall.
+- Planting recommendations should be considered alongside local knowledge and agricultural advice.
+
+Mvula is intended to support farmers' decisions, not replace their judgement.
+
+## Keeping AI Token Usage Low
+
+Mvula was developed with an intentional focus on reducing unnecessary AI token consumption while maintaining development quality.
+
+The following approaches were explored during development.
+
+### 1. Spec-Driven Development
+
+Before implementation, a project specification was created to establish:
+
+- What the application should do.
+- The problem it aims to solve.
+- The proposed solution.
+- The expected functionality and user experience.
+
+This helped align development around a shared understanding before asking AI tools to generate code.
+
+A clear specification reduces repeated explanations, unnecessary prompt iterations and avoidable rework.
+
+### 2. Exploring Multilingual Prompting
+
+An experimental approach was used to reduce prompt length when working with GitHub Copilot.
+
+The process involved:
+
+1. Writing prompts in English.
+2. Translating the prompts into Mandarin using Google Translate.
+3. Submitting the translated prompts to GitHub Copilot.
+4. Translating the responses back into English for review.
+
+The motivation was that Mandarin expressions can sometimes use fewer written characters than their English equivalents.
+
+**Important:** Fewer characters do not automatically mean fewer AI tokens. Token counts depend on the tokenizer used by the underlying model. This should therefore be treated as an experiment rather than a guaranteed token-saving technique. Token usage should be measured before claiming actual savings.
+
+### 3. Reusable AI Skills and UI/UX ProMax
+
+Reusable skills and structured instructions were implemented to help AI tools perform specific development tasks more consistently.
+
+UI development also incorporated **UI/UX ProMax**, helping guide interface design and improve the overall user experience.
+
+This approach encouraged more structured AI-assisted development instead of relying entirely on repeated, generic prompts.
+
+A related community resource:
+
+[UI/UX ProMax Discord resource](https://discord.com/channels/1572209739356569750/1572251707109416970)
+
+## Contributing
+
+Contributions, suggestions and improvements are welcome.
+
+When contributing:
+
+1. Create a feature branch.
+2. Keep changes focused on a specific improvement.
+3. Run relevant tests and builds.
+4. Submit a pull request describing the problem and proposed solution.
+
+## License
+
+Check the repository for the applicable license and usage terms.
+>>>>>>> Stashed changes
