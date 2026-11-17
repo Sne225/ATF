@@ -24,6 +24,23 @@ npm run build
 npm run preview
 ```
 
+## Deploy to Vercel
+
+Import this repository into Vercel and deploy it as a Vite project. The
+included `vercel.json` sets the production build command and `dist` output
+directory. Use Node.js 22.x in the Vercel project settings.
+
+To use live weather and place-search data instead of the built-in demo data,
+add this environment variable to the Vercel project before deploying:
+
+```text
+VITE_API_MODE=live
+```
+
+Apply it to the Production environment (and Preview too, if desired), then
+redeploy. The app calls the public Open-Meteo and Nominatim APIs from the
+visitor's browser; no API keys or server functions are required.
+
 Location access requires HTTPS or localhost. Without it, search for a place or
 tap the map to set the field.
 
@@ -82,7 +99,7 @@ called at runtime.
   request per second.
 - Forecast responses are cached in this browser's local storage for one hour.
   Stale data for the same rounded field coordinates may be shown after a
-  network failure. No user account or server is involved.
+  network failure. No user account or application backend is involved.
 
 The service sends coordinates to the selected public data providers. Weather
 models are estimates at a regional grid scale; soil readings may be absent.
@@ -101,10 +118,11 @@ consult an extension officer before making a planting decision.
 - The live GPS dot and accuracy circle are separate from the movable field pin.
 - The crop catalogue's recent selections are saved locally. No field names or
   user profiles are sent to a server.
+- When hosted on Vercel, Vercel serves the static app; the app itself does not
+  use an application backend or user accounts.
 - The map uses standard OpenStreetMap tiles only; no satellite layer, offline
   app shell, saved fields, or additional language is included.
-- GitHub Pages deployment is intentionally not configured; this build is
-  focused on working locally.
+- GitHub Pages deployment is not configured.
 
 ## Use of GitHub Copilot
 
